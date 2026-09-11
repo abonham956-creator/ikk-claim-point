@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IKK รับเติมเกม — รับแต้มสะสม</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:#7EC8E3;
+    --lavender:#C9C2E8;
+    --bubblegum:#FF8FC4;
+    --deepblue:#2E7FC1;
+    --cream:#F5FAFF;
+    --peach:#FFD98E;
+  }
+  body{
+    font-family:'Noto Sans Thai', sans-serif;
+    background-color:var(--cream);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(126,200,227,0.35) 0, transparent 45%),
+      radial-gradient(circle at 88% 4%, rgba(201,194,232,0.4) 0, transparent 40%),
+      radial-gradient(circle at 90% 92%, rgba(255,217,142,0.25) 0, transparent 40%);
+  }
+  .font-display{ font-family:'Mitr', sans-serif; }
+
+  @keyframes pop-in {
+    0% { opacity:0; transform: scale(0.92) translateY(8px); }
+    60% { opacity:1; transform: scale(1.02) translateY(-2px); }
+    100% { opacity:1; transform: scale(1) translateY(0); }
+  }
+  .animate-pop { animation: pop-in 0.45s cubic-bezier(.2,.8,.3,1.1) both; }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+  }
+  .float-slow { animation: float-slow 4.5s ease-in-out infinite; }
+
+  .spinner {
+    border: 3px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    width: 18px; height: 18px;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .brand-border{ border: 2.5px solid var(--sky); }
+</style>
+</head>
+<body class="min-h-screen flex justify-center px-4 py-8">
+
+  <div class="w-full max-w-md">
+
+    <!-- ===== Header / brand ===== -->
+    <header class="relative text-center mb-6 pt-2">
+      <div class="absolute -top-3 left-2 w-14 h-14 rounded-full bg-[var(--lavender)]/50 blur-xl"></div>
+      <div class="absolute -top-1 right-4 w-10 h-10 rounded-full bg-[var(--peach)]/50 blur-lg"></div>
+
+      <div class="relative float-slow inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white brand-border shadow-sm mb-3">
+        <span class="text-2xl">🎮</span>
+      </div>
+
+      <h1 class="font-display text-2xl font-semibold text-[var(--deepblue)]">IKK รับเติมเกม</h1>
+      <p class="text-sm text-slate-500 mt-1">รับแต้มสะสมของคุณ</p>
+    </header>
+
+    <!-- ===== Claim form ===== -->
+    <section class="relative bg-white rounded-3xl brand-border p-5 shadow-[0_6px_0_0_rgba(126,200,227,0.25)]">
+      <span class="absolute -top-3 -right-2 bg-[var(--peach)] text-[11px] font-semibold text-slate-700 px-3 py-1 rounded-full rotate-6 shadow-sm">รับแต้ม</span>
+
+      <form id="claimForm" class="flex flex-col gap-4">
+        <div>
+          <label for="claimCode" class="block text-sm font-medium text-slate-600 mb-1.5">รหัสโค้ด</label>
+          <input
+            id="claimCode" type="text" required
+            placeholder="เช่น IKK-A3K9P"
+            class="w-full rounded-2xl border-2 border-slate-200 focus:border-[var(--sky)] focus:ring-4 focus:ring-[var(--sky)]/20 outline-none px-4 py-3 text-slate-700 placeholder:text-slate-300 transition uppercase"
+          />
+        </div>
+
+        <div>
+          <label for="claimUserId" class="block text-sm font-medium text-slate-600 mb-1.5">UID เกมของคุณ</label>
+          <input
+            id="claimUserId" type="text" required
+            placeholder="กรอก UID เกมของคุณ"
+            class="w-full rounded-2xl border-2 border-slate-200 focus:border-[var(--sky)] focus:ring-4 focus:ring-[var(--sky)]/20 outline-none px-4 py-3 text-slate-700 placeholder:text-slate-300 transition"
+          />
+        </div>
+
+        <button id="claimBtn" type="submit"
+          class="mt-1 flex items-center justify-center gap-2 rounded-2xl bg-[var(--bubblegum)] hover:bg-[#ff7ab8] active:scale-[0.98] text-white font-medium py-3.5 shadow-[0_4px_0_0_#e06aa0] active:shadow-none active:translate-y-1 transition-all">
+          <span id="claimBtnLabel">กดรับสิทธิ์ / สะสมแต้ม</span>
+          <span id="claimBtnSpinner" class="spinner hidden"></span>
+        </button>
+      </form>
+
+      <p id="claimError" class="hidden mt-3 text-sm text-rose-500 bg-rose-50 rounded-xl px-3 py-2"></p>
+    </section>
+
+    <!-- ===== Claim success card ===== -->
+    <section id="claimResult" class="hidden mt-5 bg-white rounded-3xl brand-border p-5 animate-pop">
+      <div class="text-center mb-4">
+        <span class="text-3xl">🎉</span>
+        <p class="font-display text-lg text-[var(--deepblue)] font-medium mt-1">รับแต้มสำเร็จ!</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="rounded-2xl bg-[var(--cream)] px-4 py-3 text-center">
+          <p id="claimTotal" class="font-display text-2xl font-semibold text-[var(--deepblue)]">0</p>
+          <p class="text-xs text-slate-500 mt-0.5">ยอดสะสมรวม (บาท)</p>
+        </div>
+        <div class="rounded-2xl bg-[var(--sky)]/15 px-4 py-3 text-center">
+          <p id="claimPoints" class="font-display text-2xl font-semibold text-[var(--deepblue)]">0</p>
+          <p class="text-xs text-slate-500 mt-0.5">สิทธิ์ลุ้นรางวัล</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-sm text-slate-500 rounded-2xl border border-dashed border-slate-200 px-4 py-2.5 mb-4">
+        <span>เศษยอดคงเหลือ</span>
+        <span id="claimRemainder" class="font-medium text-slate-600">0 บาท</span>
+      </div>
+
+      <div class="rounded-2xl bg-[var(--peach)]/40 border border-[var(--peach)] px-4 py-3 flex gap-2 items-start">
+        <span class="text-lg leading-none">💡</span>
+        <p id="claimUpsellText" class="text-sm text-slate-700 leading-snug"></p>
+      </div>
+    </section>
+
+  </div>
+
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw3xipY2M3nkBGmAp2J-gt5wrc6f2wt_242F3vRHeaDUlX3B3yJGcIMIgpQXvGQn3rQ/exec';
+
+  // ---------- Auto-fill code from ?code= in URL ----------
+  const urlParams = new URLSearchParams(window.location.search);
+  const codeFromUrl = urlParams.get('code');
+  if (codeFromUrl) {
+    document.getElementById('claimCode').value = codeFromUrl.toUpperCase();
+  }
+
+  // ---------- Helpers ----------
+  function setBtnLoading(btn, labelEl, spinnerEl, isLoading, loadingText, defaultText){
+    btn.disabled = isLoading;
+    btn.classList.toggle('opacity-70', isLoading);
+    spinnerEl.classList.toggle('hidden', !isLoading);
+    labelEl.textContent = isLoading ? loadingText : defaultText;
+  }
+
+  async function postAction(payload){
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  // ---------- Claim code ----------
+  const claimForm = document.getElementById('claimForm');
+  const claimBtn = document.getElementById('claimBtn');
+  const claimBtnLabel = document.getElementById('claimBtnLabel');
+  const claimBtnSpinner = document.getElementById('claimBtnSpinner');
+  const claimError = document.getElementById('claimError');
+  const claimResult = document.getElementById('claimResult');
+
+  claimForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    claimError.classList.add('hidden');
+
+    const codeId = document.getElementById('claimCode').value.trim().toUpperCase();
+    const userId = document.getElementById('claimUserId').value.trim();
+
+    if (!codeId || !userId) {
+      claimError.textContent = 'กรุณากรอกรหัสโค้ดและ UID เกมให้ถูกต้อง';
+      claimError.classList.remove('hidden');
+      return;
+    }
+
+    setBtnLoading(claimBtn, claimBtnLabel, claimBtnSpinner, true, 'กำลังรับสิทธิ์...', 'กดรับสิทธิ์ / สะสมแต้ม');
+
+    try {
+      const data = await postAction({ action: 'claim', CodeID: codeId, UserID: userId });
+
+      if (data.status !== 'success') {
+        claimError.textContent = data.message || 'รับสิทธิ์ไม่สำเร็จ กรุณาตรวจสอบรหัสโค้ดอีกครั้ง';
+        claimError.classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('claimTotal').textContent = Number(data.totalAmount).toLocaleString('th-TH');
+      document.getElementById('claimPoints').textContent = data.totalPoints;
+      document.getElementById('claimRemainder').textContent = Number(data.remainder).toLocaleString('th-TH') + ' บาท';
+
+      const needed = Number(data.amountNeededForNextPoint);
+      const upsellText = document.getElementById('claimUpsellText');
+      if (needed > 0) {
+        upsellText.innerHTML = `เติมอีก <span class="font-semibold text-[var(--deepblue)]">${needed.toLocaleString('th-TH')} บาท</span> รับสิทธิ์ลุ้นรางวัลเพิ่มอีก 1 สิทธิ์!`;
+      } else {
+        upsellText.innerHTML = `พอดีรับสิทธิ์ครบแล้ว 🎉 เริ่มสะสมรอบใหม่ได้เลย`;
+      }
+
+      claimResult.classList.remove('hidden');
+      claimResult.classList.remove('animate-pop');
+      void claimResult.offsetWidth;
+      claimResult.classList.add('animate-pop');
+      claimForm.classList.add('hidden');
+
+      claimResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+      claimError.textContent = 'เชื่อมต่อ Web App ไม่สำเร็จ กรุณาเช็คอินเทอร์เน็ตแล้วลองใหม่';
+      claimError.classList.remove('hidden');
+    } finally {
+      setBtnLoading(claimBtn, claimBtnLabel, claimBtnSpinner, false, 'กำลังรับสิทธิ์...', 'กดรับสิทธิ์ / สะสมแต้ม');
+    }
+  });
+</script>
+</body>
+</html>
