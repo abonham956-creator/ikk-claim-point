@@ -80,6 +80,7 @@
             placeholder="เช่น IKK-A3K9P"
             class="w-full rounded-2xl border-2 border-slate-200 focus:border-[var(--sky)] focus:ring-4 focus:ring-[var(--sky)]/20 outline-none px-4 py-3 text-slate-700 placeholder:text-slate-300 transition uppercase"
           />
+          <p id="codeFormatError" class="hidden mt-1.5 text-xs text-rose-500">กรอกรหัสโค้ดผิดช่อง / รูปแบบไม่ถูกต้อง</p>
         </div>
 
         <div>
@@ -124,10 +125,14 @@
         <span id="claimRemainder" class="font-medium text-slate-600">0 บาท</span>
       </div>
 
-      <div class="rounded-2xl bg-[var(--peach)]/40 border border-[var(--peach)] px-4 py-3 flex gap-2 items-start">
+      <div class="rounded-2xl bg-[var(--peach)]/40 border border-[var(--peach)] px-4 py-3 flex gap-2 items-start mb-4">
         <span class="text-lg leading-none">💡</span>
         <p id="claimUpsellText" class="text-sm text-slate-700 leading-snug"></p>
       </div>
+
+      <button id="backToStartBtn" class="w-full rounded-2xl border-2 border-[var(--sky)] text-[var(--deepblue)] font-medium py-2.5 hover:bg-[var(--sky)]/10 transition">
+        ↺ กลับไปหน้าแรก / เติมโค้ดใบอื่น
+      </button>
     </section>
 
   </div>
@@ -138,9 +143,29 @@
   // ---------- Auto-fill code from ?code= in URL ----------
   const urlParams = new URLSearchParams(window.location.search);
   const codeFromUrl = urlParams.get('code');
+  const claimCodeInput = document.getElementById('claimCode');
   if (codeFromUrl) {
-    document.getElementById('claimCode').value = codeFromUrl.toUpperCase();
+    claimCodeInput.value = codeFromUrl.toUpperCase();
   }
+
+  // ---------- Validate code format (ต้องขึ้นต้นด้วย "IKK-") ----------
+  const codeFormatError = document.getElementById('codeFormatError');
+
+  function isValidCodeFormat(code){
+    return /^IKK-/.test(code);
+  }
+
+  function checkCodeFormat(){
+    const value = claimCodeInput.value.trim().toUpperCase();
+    const isValid = value === '' || isValidCodeFormat(value);
+    codeFormatError.classList.toggle('hidden', isValid);
+    return isValid;
+  }
+
+  claimCodeInput.addEventListener('input', () => {
+    claimCodeInput.value = claimCodeInput.value.toUpperCase();
+    checkCodeFormat();
+  });
 
   // ---------- Helpers ----------
   function setBtnLoading(btn, labelEl, spinnerEl, isLoading, loadingText, defaultText){
@@ -171,13 +196,17 @@
     e.preventDefault();
     claimError.classList.add('hidden');
 
-    const codeId = document.getElementById('claimCode').value.trim().toUpperCase();
+    const codeId = claimCodeInput.value.trim().toUpperCase();
     const userId = document.getElementById('claimUserId').value.trim();
 
     if (!codeId || !userId) {
       claimError.textContent = 'กรุณากรอกรหัสโค้ดและ UID เกมให้ถูกต้อง';
       claimError.classList.remove('hidden');
       return;
+    }
+
+    if (!checkCodeFormat()) {
+      return; // ข้อความเตือนใต้ช่องกรอกแสดงอยู่แล้วจาก checkCodeFormat()
     }
 
     setBtnLoading(claimBtn, claimBtnLabel, claimBtnSpinner, true, 'กำลังรับสิทธิ์...', 'กดรับสิทธิ์ / สะสมแต้ม');
@@ -217,6 +246,22 @@
     } finally {
       setBtnLoading(claimBtn, claimBtnLabel, claimBtnSpinner, false, 'กำลังรับสิทธิ์...', 'กดรับสิทธิ์ / สะสมแต้ม');
     }
+  });
+
+  // ---------- Back to start / claim another code ----------
+  document.getElementById('backToStartBtn').addEventListener('click', () => {
+    claimForm.reset();
+    claimForm.classList.remove('hidden');
+    claimResult.classList.add('hidden');
+    claimError.classList.add('hidden');
+    codeFormatError.classList.add('hidden');
+
+    // ถ้าเปิดมาจากลิงก์ที่มี ?code= อยู่ ให้เอาโค้ดเดิมออกจาก URL ด้วย
+    // เพื่อไม่ให้ auto-fill โค้ดเก่ากลับมาอีกถ้ามีการรีเฟรชหน้า
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    claimCodeInput.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 </script>
 </body>
